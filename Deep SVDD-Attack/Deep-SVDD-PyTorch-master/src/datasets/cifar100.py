@@ -132,7 +132,7 @@ class CIFAR100_Dataset(TorchvisionDataset):
         train_set = MyCIFAR100(root=self.root, train=True, download=True,
                               transform=transform, target_transform=target_transform)
         # Subset train set to normal class
-        train_idx_normal = get_target_label_idx(train_set.train_labels, self.normal_classes)
+        train_idx_normal = get_target_label_idx(train_set.targets, self.normal_classes)
         self.train_set = Subset(train_set, train_idx_normal)
 
         self.test_set = MyCIFAR100(root=self.root, train=False, download=True,
@@ -152,10 +152,11 @@ class MyCIFAR100(CIFAR100):
         Returns:
             triple: (image, target, index) where target is index of the target class.
         """
-        if self.train:
-            img, target = self.train_data[index], self.train_labels[index]
-        else:
-            img, target = self.test_data[index], self.test_labels[index]
+        # if self.train:
+        #     img, target = self.train_data[index], self.train_labels[index]
+        # else:
+        #     img, target = self.test_data[index], self.test_labels[index]
+        img, target = self.data[index], self.targets[index]
 
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
