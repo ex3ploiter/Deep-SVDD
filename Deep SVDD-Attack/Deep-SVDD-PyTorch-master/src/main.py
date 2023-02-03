@@ -53,9 +53,13 @@ from datasets.main import load_dataset
               help='Number of workers for data loading. 0 means that the data will be loaded in the main process.')
 @click.option('--normal_class', type=int, default=0,
               help='Specify the normal class of the dataset (all other classes are considered anomalous).')
+
+@click.option('--attack_type', type=click.Choice(['fgsm', 'pgd','bbox']), default='fgsm')
+@click.option('--attack_target', type=click.Choice(['clear', 'normal','anomal','both']), default='clear')
+
 def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, objective, nu, device, seed,
          optimizer_name, lr, n_epochs, lr_milestone, batch_size, weight_decay, pretrain, ae_optimizer_name, ae_lr,
-         ae_n_epochs, ae_lr_milestone, ae_batch_size, ae_weight_decay, n_jobs_dataloader, normal_class):
+         ae_n_epochs, ae_lr_milestone, ae_batch_size, ae_weight_decay, n_jobs_dataloader, normal_class,attack_type,attack_target):
     """
     Deep SVDD, a fully deep method for anomaly detection.
 
@@ -162,7 +166,7 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
                     n_jobs_dataloader=n_jobs_dataloader)
 
     # Test model
-    deep_SVDD.test(dataset, device=device, n_jobs_dataloader=n_jobs_dataloader)
+    deep_SVDD.test(dataset, device=device, n_jobs_dataloader=n_jobs_dataloader,attack_type,attack_target)
 
     # Plot most anomalous and most normal (within-class) test samples
     indices, labels, scores = zip(*deep_SVDD.results['test_scores'])

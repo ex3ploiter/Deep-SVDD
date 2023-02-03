@@ -17,9 +17,9 @@ class DeepSVDDTrainer(BaseTrainer):
 
     def __init__(self, objective, R, c, nu: float, optimizer_name: str = 'adam', lr: float = 0.001, n_epochs: int = 150,
                  lr_milestones: tuple = (), batch_size: int = 128, weight_decay: float = 1e-6, device: str = 'cuda',
-                 n_jobs_dataloader: int = 0):
+                 n_jobs_dataloader: int = 0,attack_type=attack_type,attack_target=attack_target):
         super().__init__(optimizer_name, lr, n_epochs, lr_milestones, batch_size, weight_decay, device,
-                         n_jobs_dataloader)
+                         n_jobs_dataloader,attack_type,attack_target)
 
         assert objective in ('one-class', 'soft-boundary'), "Objective must be either 'one-class' or 'soft-boundary'."
         self.objective = objective
@@ -37,6 +37,10 @@ class DeepSVDDTrainer(BaseTrainer):
         self.test_auc = None
         self.test_time = None
         self.test_scores = None
+        
+        self.attack_type=attack_type
+        self.attack_target=attack_target
+        
 
     def train(self, dataset: BaseADDataset, net: BaseNet):
         logger = logging.getLogger()
@@ -137,7 +141,18 @@ class DeepSVDDTrainer(BaseTrainer):
                 scores = dist
                 
             
-
+            shouldBeAttacked=False
+            if self.attack_target=='normal':
+                if labels==0:
+                    shouldBeAttacked=True
+            elif self.attack_target=='anomal':
+                if labels==1:
+                    shouldBeAttacked=True
+            elif self.attack_target=='both':
+                shouldBeAttacked=True
+            
+            
+            
             # Save triples of (idx, label, score) in a list
             idx_label_score += list(zip(idx.cpu().data.numpy().tolist(),
                                         labels.cpu().data.numpy().tolist(),
@@ -145,19 +160,28 @@ class DeepSVDDTrainer(BaseTrainer):
 
             
             ########---------------########
-            # adv_delta=fgsm(net,inputs,self.c,0.1,self.objective,self.R)
-            adv_delta=pgd(net, inputs, self.c, 0.1, 1/255, 10,self.objective,self.R)
             
-            adv_image = inputs+adv_delta if labels==0 else inputs-adv_delta
-
-            
-            adv_outputs=net(adv_image)
-            dist = torch.sum((adv_outputs - self.c) ** 2, dim=1)
-            if self.objective == 'soft-boundary':
-                scores = dist - self.R ** 2
-            else:
-                scores = dist
+            if self.attack_type!='clear':
                 
+            # if self.attack_target=='normal':
+                if shouldBeAttacked==True:
+                    if self.attack_type=='fgsm':
+                        adv_delta=fgsm(net,inputs,self.c,0.1,self.objective,self.R)
+                    
+                    if self.attack_type=='pgd':
+                        adv_delta=pgd(net, inputs, self.c, 0.1, 1/255, 10,self.objective,self.R)
+                    
+                    adv_image = inputs+adv_delta if labels==0 else inputs-adv_delta
+
+                    
+                    adv_outputs=net(adv_image)
+                    dist = torch.sum((adv_outputs - self.c) ** 2, dim=1)
+                    if self.objective == 'soft-boundary':
+                        scores = dist - self.R ** 2
+                    else:
+                        scores = dist
+                    
+                        
             idx_label_score_adv += list(zip(idx.cpu().data.numpy().tolist(),
                         labels.cpu().data.numpy().tolist(),
                         scores.cpu().data.numpy().tolist()))

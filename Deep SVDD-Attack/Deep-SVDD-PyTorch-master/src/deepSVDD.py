@@ -72,12 +72,12 @@ class DeepSVDD(object):
         self.c = self.trainer.c.cpu().data.numpy().tolist()  # get list
         self.results['train_time'] = self.trainer.train_time
 
-    def test(self, dataset: BaseADDataset, device: str = 'cuda', n_jobs_dataloader: int = 0):
+    def test(self, dataset: BaseADDataset, device: str = 'cuda', n_jobs_dataloader: int = 0,attack_type='fgsm',attack_target='clear'):
         """Tests the Deep SVDD model on the test data."""
 
         if self.trainer is None:
             self.trainer = DeepSVDDTrainer(self.objective, self.R, self.c, self.nu,
-                                           device=device, n_jobs_dataloader=n_jobs_dataloader)
+                                           device=device, n_jobs_dataloader=n_jobs_dataloader,attack_type=attack_type,attack_target=attack_target)
 
         self.trainer.test(dataset, self.net)
         # Get results
