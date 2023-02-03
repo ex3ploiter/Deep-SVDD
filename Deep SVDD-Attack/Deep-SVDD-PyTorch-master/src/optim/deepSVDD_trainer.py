@@ -17,7 +17,7 @@ class DeepSVDDTrainer(BaseTrainer):
 
     def __init__(self, objective, R, c, nu: float, optimizer_name: str = 'adam', lr: float = 0.001, n_epochs: int = 150,
                  lr_milestones: tuple = (), batch_size: int = 128, weight_decay: float = 1e-6, device: str = 'cuda',
-                 n_jobs_dataloader: int = 0,attack_type=attack_type,attack_target=attack_target):
+                 n_jobs_dataloader: int = 0,attack_type='fgsm',attack_target='clear'):
         super().__init__(optimizer_name, lr, n_epochs, lr_milestones, batch_size, weight_decay, device,
                          n_jobs_dataloader,attack_type,attack_target)
 
