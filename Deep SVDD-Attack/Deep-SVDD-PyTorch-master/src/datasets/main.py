@@ -19,5 +19,8 @@ def load_dataset(dataset_name, data_path, normal_class):
 
     if dataset_name == 'svhn':
         dataset = SVHN_Dataset(root=data_path, normal_class=normal_class)
+    
+    if dataset_name == 'cifar100':
+        dataset = CIFAR100_Dataset(root=data_path, normal_class=normal_class)
 
     return dataset
