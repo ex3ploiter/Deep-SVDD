@@ -246,7 +246,7 @@ class DeepSVDDTrainer(BaseTrainer):
             results['ADV_AUC'].append( 100. * self.test_auc)
             
         df = pd.DataFrame(results)
-        df.to_csv(os.path.join('./',f'Results_{self.attack_type}_{self.attack_target}'), index=False)
+        df.to_csv(os.path.join('./',f'Results_{self.attack_type}_{self.attack_target}.csv'), index=False)
         
 
     def init_center_c(self, train_loader: DataLoader, net: BaseNet, eps=0.1):
