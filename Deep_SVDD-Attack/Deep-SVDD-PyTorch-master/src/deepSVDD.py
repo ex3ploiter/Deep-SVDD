@@ -79,6 +79,10 @@ class DeepSVDD(object):
             self.trainer = DeepSVDDTrainer(self.objective, self.R, self.c, self.nu,
                                            device=device, n_jobs_dataloader=n_jobs_dataloader,attack_type=attack_type,attack_target=attack_target)
 
+        
+        self.trainer.attack_target=attack_target
+        self.trainer.attack_type=attack_type
+        
         self.trainer.test(dataset, self.net)
         # Get results
         self.results['test_auc'] = self.trainer.test_auc

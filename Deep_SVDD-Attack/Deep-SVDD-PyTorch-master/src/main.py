@@ -57,12 +57,10 @@ import pandas as pd
 @click.option('--normal_class', type=int, default=0,
               help='Specify the normal class of the dataset (all other classes are considered anomalous).')
 
-@click.option('--attack_type', type=click.Choice(['fgsm', 'pgd','bbox']), default='fgsm')
-@click.option('--attack_target', type=click.Choice(['clear', 'normal','anomal','both']), default='clear')
 
 def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, objective, nu, device, seed,
          optimizer_name, lr, n_epochs, lr_milestone, batch_size, weight_decay, pretrain, ae_optimizer_name, ae_lr,
-         ae_n_epochs, ae_lr_milestone, ae_batch_size, ae_weight_decay, n_jobs_dataloader, normal_class,attack_type,attack_target):
+         ae_n_epochs, ae_lr_milestone, ae_batch_size, ae_weight_decay, n_jobs_dataloader, normal_class):
     """
     Deep SVDD, a fully deep method for anomaly detection.
 
@@ -180,6 +178,9 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
     
     for att_type in ['fgsm', 'pgd']:
         for att_target in ['clear', 'normal','anomal','both']:
+            
+            print(f'\n\nAttack Type: {att_type} and Attack Target: {att_target}\n\n')
+            
     # Test model
         # deep_SVDD.test(dataset, device=device, n_jobs_dataloader=n_jobs_dataloader,attack_type=attack_type,attack_target=attack_target)
             deep_SVDD.test(dataset, device=device, n_jobs_dataloader=n_jobs_dataloader,attack_type=att_type,attack_target=att_target)
@@ -195,9 +196,9 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
             # _, _, scores = zip(*deep_SVDD.results['test_scores'])
             # scores = np.array(scores).tolist()
 
-    df = pd.DataFrame(mine_result)
-    df.to_csv(os.path.join('./','Results_Class_{normal_class}.csv'), index=False)
-    
+            df = pd.DataFrame(mine_result)
+            df.to_csv(os.path.join('./',f'Results_Class_{normal_class}.csv'), index=False)
+            
     
         # idx_sorted = indices[labels == 0][np.argsort(scores[labels == 0])]  # sorted from lowest to highest anomaly score
 
