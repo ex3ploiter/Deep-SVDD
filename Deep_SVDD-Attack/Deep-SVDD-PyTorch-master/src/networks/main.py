@@ -21,7 +21,7 @@ def build_network(net_name):
     if net_name == 'cifar10_LeNet_ELU':
         net = CIFAR10_LeNet_ELU()
     
-    if net_name == 'mvtec_LeNet':
+    if net_name  == 'mvtec_LeNet':
         net = MVTec_LeNet()   
 
     return net
