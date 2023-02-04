@@ -16,23 +16,30 @@ class MVTec_Dataset(TorchvisionDataset):
 
         self.n_classes = 2  # 0: normal, 1: outlier
         self.normal_classes = tuple([normal_class])
-        self.outlier_classes = list(range(0, 10))
+        self.outlier_classes = list(range(0, 15))
         self.outlier_classes.remove(normal_class)
 
         # Pre-computed min and max values (after applying GCN) from train data per class
-        min_max = [(-28.94083453598571, 13.802961825439636),
-                   (-6.681770233365245, 9.158067708230273),
-                   (-34.924463588638204, 14.419298165027628),
-                   (-10.599172931391799, 11.093187820377565),
-                   (-11.945022995801637, 10.628045447867583),
-                   (-9.691969487694928, 8.948326776180823),
-                   (-9.174940012342555, 13.847014686472365),
-                   (-6.876682005899029, 12.282371383343161),
-                   (-15.603507135507172, 15.2464923804279),
-                   (-6.132882973622672, 8.046098172351265)]
+        min_max = [(-1.280467867851257 , 1.380750298500061),
+(-2.348408460617065 , 4.638308525085449),
+(-3.146009206771851 , 1.405009150505066),
+(-3.430535793304443 , 6.451485157012939),
+(-2.849516868591309 , 3.375417232513428),
+(-3.163123607635498 , 13.883568763732910),
+(-2.112395763397217 , 7.129158973693848),
+(-1.277425050735474 , 6.942065715789795),
+(-0.968891263008118 , 2.238602399826050),
+(-7.060428142547607 , 2.036980152130127),
+(-3.211194038391113 , 6.290756702423096),
+(-0.834994316101074 , 4.577285289764404),
+(-1.986122012138367 , 5.502355098724365),
+(-2.754846811294556 , 4.641113758087158),
+(-1.266530275344849 , 2.525079250335693)]
 
         # CIFAR-10 preprocessing: GCN (with L1 norm) and min-max feature scaling to [0,1]
-        transform = transforms.Compose([transforms.ToTensor(),
+        transform = transforms.Compose([
+          transforms.Resize(256),
+          transforms.ToTensor(),
                                         transforms.Lambda(lambda x: global_contrast_normalization(x, scale='l1')),
                                         transforms.Normalize([min_max[normal_class][0]] * 3,
                                                              [min_max[normal_class][1] - min_max[normal_class][0]] * 3)])
@@ -41,9 +48,7 @@ class MVTec_Dataset(TorchvisionDataset):
 
         self.train_set = MyMVTec(root=self.root, train=True,normal_class=normal_class,
                               transform=transform, target_transform=target_transform)
-        # Subset train set to normal class
-        # train_idx_normal = get_target_label_idx(train_set.targets, self.normal_classes)
-        # self.train_set = Subset(train_set, train_idx_normal)
+
 
         self.test_set = MyMVTec(root=self.root, train=False,normal_class=normal_class,
                               transform=transform, target_transform=target_transform)
