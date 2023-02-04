@@ -11,9 +11,6 @@ import time
 import torch
 import torch.optim as optim
 import numpy as np
-import pandas as pd
-import os
-
 
 
 class DeepSVDDTrainer(BaseTrainer):
@@ -120,133 +117,115 @@ class DeepSVDDTrainer(BaseTrainer):
     def test(self, dataset: BaseADDataset, net: BaseNet):
         logger = logging.getLogger()
 
-
-        results={}
-        results['clear_AUC']=[]
-        # results['Attack_Type'] =[]
-        # results['Attack_Target'] =[]
-        results['ADV_AUC'] =[]
+        # Set device for network
+        net = net.to(self.device)
         
-        for time_ in range(0,5):
-            # Set device for network
-            net = net.to(self.device)
-            
-            
-            
-            batch_sz=64 if self.attack_type=='clear' else 1
+        
+        
+        batch_sz=64 if self.attack_type=='clear' else 1
 
-            # Get test data loader
-            _, test_loader = dataset.loaders(batch_size=batch_sz, num_workers=8)
+        # Get test data loader
+        _, test_loader = dataset.loaders(batch_size=batch_sz, num_workers=8)
 
-            # Testing
-            logger.info('Starting testing...')
-            start_time = time.time()
-            idx_label_score = []
-            idx_label_score_adv = []
-            net.eval()
-            # with torch.no_grad():
-            for data in test_loader:
-                inputs, labels, idx = data
-                inputs = inputs.to(self.device)
-                outputs = net(inputs)
-                dist = torch.sum((outputs - self.c) ** 2, dim=1)
-                if self.objective == 'soft-boundary':
-                    scores = dist - self.R ** 2
-                else:
-                    scores = dist
-                    
+        # Testing
+        logger.info('Starting testing...')
+        start_time = time.time()
+        idx_label_score = []
+        idx_label_score_adv = []
+        net.eval()
+        # with torch.no_grad():
+        for data in test_loader:
+            inputs, labels, idx = data
+            inputs = inputs.to(self.device)
+            outputs = net(inputs)
+            dist = torch.sum((outputs - self.c) ** 2, dim=1)
+            if self.objective == 'soft-boundary':
+                scores = dist - self.R ** 2
+            else:
+                scores = dist
                 
-                shouldBeAttacked=False
-                if self.attack_target=='normal':
-                    if labels==0:
-                        shouldBeAttacked=True
-                elif self.attack_target=='anomal':
-                    if labels==1:
-                        shouldBeAttacked=True
-                elif self.attack_target=='both':
+            
+            shouldBeAttacked=False
+            if self.attack_target=='normal':
+                if labels==0:
                     shouldBeAttacked=True
-                
-                
-                
-                # Save triples of (idx, label, score) in a list
-                idx_label_score += list(zip(idx.cpu().data.numpy().tolist(),
-                                            labels.cpu().data.numpy().tolist(),
-                                            scores.cpu().data.numpy().tolist()))
+            elif self.attack_target=='anomal':
+                if labels==1:
+                    shouldBeAttacked=True
+            elif self.attack_target=='both':
+                shouldBeAttacked=True
+            
+            
+            
+            # Save triples of (idx, label, score) in a list
+            idx_label_score += list(zip(idx.cpu().data.numpy().tolist(),
+                                        labels.cpu().data.numpy().tolist(),
+                                        scores.cpu().data.numpy().tolist()))
 
+            
+            ########---------------########
+            
+            if self.attack_type!='clear':
                 
-                ########---------------########
-                
-                if self.attack_type!='clear':
+            # if self.attack_target=='normal':
+                if shouldBeAttacked==True:
+                    if self.attack_type=='fgsm':
+                        adv_delta=fgsm(net,inputs,self.c,0.1,self.objective,self.R)
                     
-                # if self.attack_target=='normal':
-                    if shouldBeAttacked==True:
-                        if self.attack_type=='fgsm':
-                            adv_delta=fgsm(net,inputs,self.c,0.1,self.objective,self.R)
+                    if self.attack_type=='pgd':
+                        adv_delta=pgd(net, inputs, self.c, 0.1, 1/255, 10,self.objective,self.R)
+                    
+                    adv_image = inputs+adv_delta if labels==0 else inputs-adv_delta
+
+                    
+                    adv_outputs=net(adv_image)
+                    dist = torch.sum((adv_outputs - self.c) ** 2, dim=1)
+                    if self.objective == 'soft-boundary':
+                        scores = dist - self.R ** 2
+                    else:
+                        scores = dist
+                    
                         
-                        if self.attack_type=='pgd':
-                            adv_delta=pgd(net, inputs, self.c, 0.1, 1/255, 10,self.objective,self.R)
-                        
-                        adv_image = inputs+adv_delta if labels==0 else inputs-adv_delta
-
-                        
-                        adv_outputs=net(adv_image)
-                        dist = torch.sum((adv_outputs - self.c) ** 2, dim=1)
-                        if self.objective == 'soft-boundary':
-                            scores = dist - self.R ** 2
-                        else:
-                            scores = dist
-                        
-                            
-                idx_label_score_adv += list(zip(idx.cpu().data.numpy().tolist(),
-                            labels.cpu().data.numpy().tolist(),
-                            scores.cpu().data.numpy().tolist()))
+            idx_label_score_adv += list(zip(idx.cpu().data.numpy().tolist(),
+                        labels.cpu().data.numpy().tolist(),
+                        scores.cpu().data.numpy().tolist()))
 
 
 
-            self.test_time = time.time() - start_time
-            logger.info('Testing time: %.3f' % self.test_time)
+        self.test_time = time.time() - start_time
+        logger.info('Testing time: %.3f' % self.test_time)
 
-            self.test_scores = idx_label_score
+        self.test_scores = idx_label_score
 
-            # Compute AUC
-            _, labels, scores = zip(*idx_label_score)
-            labels = np.array(labels)
-            scores = np.array(scores)
-            
-            
+        # Compute AUC
+        _, labels, scores = zip(*idx_label_score)
+        labels = np.array(labels)
+        scores = np.array(scores)
+        
+        
 
-            self.test_auc = roc_auc_score(labels, scores)
-            logger.info('Test set AUC: {:.2f}%'.format(100. * self.test_auc))
-            
-            results['clear_AUC'].append( 100. * self.test_auc)
+        self.test_auc = roc_auc_score(labels, scores)
+        logger.info('Test set AUC: {:.2f}%'.format(100. * self.test_auc))
 
-            logger.info('Finished testing.')
-            
-            
-    # ----
+        logger.info('Finished testing.')
+        
+        
+# ----
 
-            _, labels, scores = zip(*idx_label_score_adv)
-            labels = np.array(labels)
-            
-            scores = np.array(scores)
-            
-            
+        _, labels, scores = zip(*idx_label_score_adv)
+        labels = np.array(labels)
+        scores = np.array(scores)
+        
+        
 
-            self.test_auc = roc_auc_score(labels, scores)
-            logger.info('ADV : Test set AUC : {:.2f}%'.format(100. * self.test_auc))
-
-            logger.info('ADV : Finished testing.')        
-            
-            
-            
-            # results['Attack_Type'].append( self.attack_type)
-            # results['Attack_Target'].append(  self.Attack_Target)
-            
-            
-            results['ADV_AUC'].append( 100. * self.test_auc)
-            
-        df = pd.DataFrame(results)
-        df.to_csv(os.path.join('./',f'Results_{self.attack_type}_{self.attack_target}.csv'), index=False)
+        self.test_auc = roc_auc_score(labels, scores)
+        logger.info(f'Attack Type: {self.attack_type} and Attack Target: {self.attack_target}')
+        logger.info('ADV : Test set AUC : {:.2f}%'.format(100. * self.test_auc))
+        
+        logger.info('ADV : Finished testing.')        
+        
+        
+        
         
 
     def init_center_c(self, train_loader: DataLoader, net: BaseNet, eps=0.1):
