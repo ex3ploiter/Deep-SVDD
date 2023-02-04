@@ -119,9 +119,13 @@ class DeepSVDDTrainer(BaseTrainer):
 
         # Set device for network
         net = net.to(self.device)
+        
+        
+        
+        batch_sz=64 if self.attack_type=='clear' else 1
 
         # Get test data loader
-        _, test_loader = dataset.loaders(batch_size=1, num_workers=8)
+        _, test_loader = dataset.loaders(batch_size=batch_sz, num_workers=8)
 
         # Testing
         logger.info('Starting testing...')

@@ -14,7 +14,7 @@ from datasets.main import load_dataset
 # Settings
 ################################################################################
 @click.command()
-@click.argument('dataset_name', type=click.Choice(['mnist', 'cifar10','svhn','cifar100','fashionmnist']))
+@click.argument('dataset_name', type=click.Choice(['mnist', 'cifar10','svhn','cifar100','fashionmnist','mvtec']))
 @click.argument('net_name', type=click.Choice(['mnist_LeNet', 'cifar10_LeNet', 'cifar10_LeNet_ELU']))
 @click.argument('xp_path', type=click.Path(exists=True))
 @click.argument('data_path', type=click.Path(exists=True))
@@ -163,7 +163,7 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
                     batch_size=cfg.settings['batch_size'],
                     weight_decay=cfg.settings['weight_decay'],
                     device=device,
-                    n_jobs_dataloader=n_jobs_dataloader)
+                    n_jobs_dataloader=n_jobs_dataloader,attack_type=attack_type,attack_target=attack_target)
 
     # Test model
     deep_SVDD.test(dataset, device=device, n_jobs_dataloader=n_jobs_dataloader,attack_type=attack_type,attack_target=attack_target)

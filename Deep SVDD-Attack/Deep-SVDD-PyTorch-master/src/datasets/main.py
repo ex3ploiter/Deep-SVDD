@@ -3,12 +3,13 @@ from .cifar10 import CIFAR10_Dataset
 from .svhn import SVHN_Dataset
 from .cifar100 import CIFAR100_Dataset
 from .fashionmnist import FashionMNIST_Dataset
+from .mvtec import MVTec_Dataset
 
 
 def load_dataset(dataset_name, data_path, normal_class):
     """Loads the dataset."""
 
-    implemented_datasets = ('mnist', 'cifar10','svhn','cifar100','fashionmnist')
+    implemented_datasets = ('mnist', 'cifar10','svhn','cifar100','fashionmnist','mvtec')
     assert dataset_name in implemented_datasets
 
     dataset = None
@@ -27,5 +28,7 @@ def load_dataset(dataset_name, data_path, normal_class):
 
     if dataset_name == 'fashionmnist':
         dataset = FashionMNIST_Dataset(root=data_path, normal_class=normal_class)
-
+    
+    if dataset_name == 'mvtec':
+        dataset = MVTec_Dataset(root=data_path, normal_class=normal_class)
     return dataset
