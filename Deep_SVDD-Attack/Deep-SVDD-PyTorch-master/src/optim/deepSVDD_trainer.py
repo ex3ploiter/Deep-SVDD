@@ -227,6 +227,7 @@ class DeepSVDDTrainer(BaseTrainer):
 
             _, labels, scores = zip(*idx_label_score_adv)
             labels = np.array(labels)
+            
             scores = np.array(scores)
             
             
