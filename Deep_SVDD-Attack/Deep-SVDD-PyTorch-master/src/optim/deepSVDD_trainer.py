@@ -127,7 +127,7 @@ class DeepSVDDTrainer(BaseTrainer):
         # results['Attack_Target'] =[]
         results['ADV_AUC'] =[]
         
-        for time in range(0,5):
+        for time_ in range(0,5):
             # Set device for network
             net = net.to(self.device)
             
