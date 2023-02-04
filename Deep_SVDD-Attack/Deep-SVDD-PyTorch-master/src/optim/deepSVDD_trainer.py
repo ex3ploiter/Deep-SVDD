@@ -195,7 +195,8 @@ class DeepSVDDTrainer(BaseTrainer):
         self.test_time = time.time() - start_time
         logger.info('Testing time: %.3f' % self.test_time)
 
-        self.test_scores = idx_label_score
+        # self.test_scores = idx_label_score
+        self.test_scores = idx_label_score_adv
 
         # Compute AUC
         _, labels, scores = zip(*idx_label_score)

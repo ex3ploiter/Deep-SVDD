@@ -9,6 +9,9 @@ from utils.visualization.plot_images_grid import plot_images_grid
 from deepSVDD import DeepSVDD
 from datasets.main import load_dataset
 
+import os 
+import pandas as pd
+
 
 ################################################################################
 # Settings
@@ -165,26 +168,51 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
                     device=device,
                     n_jobs_dataloader=n_jobs_dataloader,attack_type=attack_type,attack_target=attack_target)
 
+
+    
+    mine_result={}
+    mine_result['Attack_Type']=[]
+    mine_result['Attack_Target']=[]
+    # mine_result['AUC']=[]
+    mine_result['ADV_AUC']=[]
+    
+    
+    
+    for att_type in ['fgsm', 'pgd']:
+        for att_target in ['clear', 'normal','anomal','both']:
     # Test model
-    deep_SVDD.test(dataset, device=device, n_jobs_dataloader=n_jobs_dataloader,attack_type=attack_type,attack_target=attack_target)
+        # deep_SVDD.test(dataset, device=device, n_jobs_dataloader=n_jobs_dataloader,attack_type=attack_type,attack_target=attack_target)
+            deep_SVDD.test(dataset, device=device, n_jobs_dataloader=n_jobs_dataloader,attack_type=att_type,attack_target=att_target)
+            
+            mine_result['Attack_Type'].append(att_type)
+            mine_result['Attack_Target'].append(att_target)
+            mine_result['ADV_AUC'].append(deep_SVDD.results['test_auc'])
+            
 
+    
+    
     # Plot most anomalous and most normal (within-class) test samples
-    indices, labels, scores = zip(*deep_SVDD.results['test_scores'])
-    indices, labels, scores = np.array(indices), np.array(labels), np.array(scores)
-    idx_sorted = indices[labels == 0][np.argsort(scores[labels == 0])]  # sorted from lowest to highest anomaly score
+            # _, _, scores = zip(*deep_SVDD.results['test_scores'])
+            # scores = np.array(scores).tolist()
 
-    if dataset_name in ('mnist', 'cifar10'):
+    df = pd.DataFrame(mine_result)
+    df.to_csv(os.path.join('./','Results_Class_{normal_class}.csv'), index=False)
+    
+    
+        # idx_sorted = indices[labels == 0][np.argsort(scores[labels == 0])]  # sorted from lowest to highest anomaly score
 
-        if dataset_name == 'mnist':
-            X_normals = dataset.test_set.test_data[idx_sorted[:32], ...].unsqueeze(1)
-            X_outliers = dataset.test_set.test_data[idx_sorted[-32:], ...].unsqueeze(1)
+    # if dataset_name in ('mnist', 'cifar10'):
 
-        if dataset_name == 'cifar10':
-            X_normals = torch.tensor(np.transpose(dataset.test_set.test_data[idx_sorted[:32], ...], (0, 3, 1, 2)))
-            X_outliers = torch.tensor(np.transpose(dataset.test_set.test_data[idx_sorted[-32:], ...], (0, 3, 1, 2)))
+    #     if dataset_name == 'mnist':
+    #         X_normals = dataset.test_set.test_data[idx_sorted[:32], ...].unsqueeze(1)
+    #         X_outliers = dataset.test_set.test_data[idx_sorted[-32:], ...].unsqueeze(1)
 
-        plot_images_grid(X_normals, export_img=xp_path + '/normals', title='Most normal examples', padding=2)
-        plot_images_grid(X_outliers, export_img=xp_path + '/outliers', title='Most anomalous examples', padding=2)
+    #     if dataset_name == 'cifar10':
+    #         X_normals = torch.tensor(np.transpose(dataset.test_set.test_data[idx_sorted[:32], ...], (0, 3, 1, 2)))
+    #         X_outliers = torch.tensor(np.transpose(dataset.test_set.test_data[idx_sorted[-32:], ...], (0, 3, 1, 2)))
+
+    #     plot_images_grid(X_normals, export_img=xp_path + '/normals', title='Most normal examples', padding=2)
+    #     plot_images_grid(X_outliers, export_img=xp_path + '/outliers', title='Most anomalous examples', padding=2)
 
     # Save results, model, and configuration
     deep_SVDD.save_results(export_json=xp_path + '/results.json')
