@@ -119,7 +119,7 @@ class DeepSVDDTrainer(BaseTrainer):
         net = net.to(self.device)
 
         # Get test data loader
-        batch_sz=64 if self.attack_type=='clear' else 1
+        batch_sz=self.batch_size if self.attack_type=='clear' else 1
         _, test_loader = dataset.loaders(batch_size=batch_sz, num_workers=self.n_jobs_dataloader)
 
         # Testing
@@ -148,7 +148,7 @@ class DeepSVDDTrainer(BaseTrainer):
                     adv_delta=fgsm(net,inputs,self.c,8/255,self.objective,self.R)
                 
                 if self.attack_type=='pgd':
-                    adv_delta=pgd(net, inputs, self.c, 8/255, 2/255, 10,self.objective,self.R)
+                    adv_delta=pgd(net, inputs, self.c, 8./255., 0.1, 10,self.objective,self.R)
                 
                 inputs = inputs+adv_delta if labels==0 else inputs-adv_delta
             
