@@ -113,6 +113,9 @@ class DeepSVDDTrainer(BaseTrainer):
         return net
 
     def test(self, dataset: BaseADDataset, net: BaseNet):
+        
+        print(f'Device : {self.device}')
+        
         logger = logging.getLogger()
 
         # Set device for network

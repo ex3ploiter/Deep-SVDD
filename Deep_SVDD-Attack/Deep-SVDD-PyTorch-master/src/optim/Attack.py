@@ -2,9 +2,13 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+
+
+
 def fgsm(model, inputs, c, epsilon,objective,R):
     """ Construct FGSM adversarial examples on the examples X"""
-    delta = torch.zeros_like(inputs, requires_grad=True)
+    delta = torch.zeros_like(inputs, requires_grad=True).to(device)
     
     
     outputs = model(inputs+delta)
@@ -23,7 +27,7 @@ def fgsm(model, inputs, c, epsilon,objective,R):
 
 def pgd(model, inputs, c, epsilon, alpha, num_iter,objective,R):
 
-    delta = torch.zeros_like(inputs, requires_grad=True)
+    delta = torch.zeros_like(inputs, requires_grad=True).to(device)
     for t in range(num_iter):
         
 
