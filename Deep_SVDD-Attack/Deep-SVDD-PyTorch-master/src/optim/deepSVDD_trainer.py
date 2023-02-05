@@ -148,7 +148,7 @@ class DeepSVDDTrainer(BaseTrainer):
                     adv_delta=fgsm(net,inputs,self.c,8/255,self.objective,self.R)
                 
                 if self.attack_type=='pgd':
-                    adv_delta=pgd(net, inputs, self.c, 0.1, 1/255, 10,self.objective,self.R)
+                    adv_delta=pgd(net, inputs, self.c, 8/255, 2/255, 10,self.objective,self.R)
                 
                 inputs = inputs+adv_delta if labels==0 else inputs-adv_delta
             
