@@ -39,4 +39,5 @@ def pgd(model, inputs, c, epsilon, alpha, num_iter,objective,R):
         
         delta.data = (delta + inputs.shape[0]*alpha*delta.grad.data).clamp(-epsilon,epsilon)
         delta.grad.zero_()
+    
     return delta.detach()
