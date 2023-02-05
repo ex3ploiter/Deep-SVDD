@@ -195,7 +195,7 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
 
 
             df = pd.DataFrame(mine_result)
-            df.to_csv(os.path.join('./',f'Results_Class_{normal_class}.csv'), index=False)
+            df.to_csv(os.path.join('./',f'Results_{dataset_name}_Class_{normal_class}.csv'), index=False)
             
     
 
